@@ -72,6 +72,20 @@
             </div>
         </header>
 
+        <!-- Controls -->
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex gap-2">
+                <button id="toggleSelectAll" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                    <i class="fas fa-check-square"></i>
+                    <span>Select All</span>
+                </button>
+                <button id="clearSelected" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Clear Selected</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Search and Add -->
         <div class="flex mb-6 gap-3">
             <div class="relative flex-1">
@@ -336,18 +350,235 @@
         </div>
     </div>
 
+    <!-- Input Modal -->
+    <div id="inputModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6 m-4 max-w-xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Add Your Grocery List</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Paste your list below. Items will be automatically categorized into:</p>
+                <div class="bg-gray-50 p-3 rounded text-sm text-gray-600 grid grid-cols-2 gap-2">
+                    <div>🥩 Meat and Seafood</div>
+                    <div>🥛 Dairy</div>
+                    <div>🍞 Bakery</div>
+                    <div>🍪 Snacks</div>
+                    <div>🍎 Produce</div>
+                    <div>🧂 Pantry</div>
+                </div>
+            </div>
+            <textarea id="groceryInput" rows="10" class="w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-3 mb-4" placeholder="Paste your grocery list here...&#10;One item per line"></textarea>
+            <div class="flex gap-4">
+                <button id="addItems" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span>Add to List</span>
+                </button>
+                <button id="clearItems" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                    <i class="fas fa-trash"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Add functionality to checkboxes
-        document.querySelectorAll('.item-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateProgress();
-            });
+        // Category definitions with keywords for AI categorization
+        const categories = {
+            'meat-seafood': {
+                emoji: '🥩',
+                title: 'Meat and Seafood',
+                keywords: ['chicken', 'beef', 'pork', 'fish', 'seafood', 'meat', 'turkey', 'lamb', 'steak', 'jerky', 'bacon', 'sausage']
+            },
+            'dairy': {
+                emoji: '🥛',
+                title: 'Dairy',
+                keywords: ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'eggs', 'margarine', 'cottage']
+            },
+            'bakery': {
+                emoji: '🍞',
+                title: 'Bakery',
+                keywords: ['bread', 'bagel', 'roll', 'bun', 'muffin', 'pastry', 'croissant', 'tortilla', 'pita']
+            },
+            'snacks': {
+                emoji: '🍪',
+                title: 'Snacks',
+                keywords: ['snack', 'cookie', 'cracker', 'chip', 'nuts', 'popcorn', 'pretzel', 'candy', 'chocolate', 'granola']
+            },
+            'produce': {
+                emoji: '🍎',
+                title: 'Produce',
+                keywords: ['fruit', 'vegetable', 'banana', 'apple', 'onion', 'garlic', 'pepper', 'lettuce', 'tomato', 'potato', 'spinach', 'carrot']
+            },
+            'pantry': {
+                emoji: '🧂',
+                title: 'Pantry',
+                keywords: ['sauce', 'oil', 'spice', 'seasoning', 'salt', 'pepper', 'sugar', 'flour', 'honey', 'vinegar', 'condiment']
+            }
+        };
+
+        // Initialize items in localStorage if not exists
+        if (!localStorage.getItem('groceryItems')) {
+            localStorage.setItem('groceryItems', JSON.stringify({}));
+        }
+
+        // Show/hide modal
+        document.querySelector('button.bg-indigo-600:not(#toggleSelectAll)').addEventListener('click', function() {
+            document.getElementById('inputModal').classList.remove('hidden');
         });
 
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('inputModal').classList.add('hidden');
+        });
+
+        // Categorize a single item
+        function categorizeItem(item) {
+            item = item.toLowerCase();
+            for (const [categoryId, category] of Object.entries(categories)) {
+                if (category.keywords.some(keyword => item.includes(keyword.toLowerCase()))) {
+                    return categoryId;
+                }
+            }
+            return 'pantry'; // Default category
+        }
+
+        // Process input and add items
+        document.getElementById('addItems').addEventListener('click', function() {
+            const input = document.getElementById('groceryInput').value;
+            const lines = input.split('\n');
+            const groceryItems = JSON.parse(localStorage.getItem('groceryItems'));
+
+            // Category header patterns to ignore
+            const categoryPatterns = [
+                /^meat.*seafood:?$/i,
+                /^dairy:?$/i,
+                /^bakery:?$/i,
+                /^snacks?:?$/i,
+                /^produce:?$/i,
+                /^pantry:?$/i,
+                /^🥩.*$/,
+                /^🥛.*$/,
+                /^🍞.*$/,
+                /^🍪.*$/,
+                /^🍎.*$/,
+                /^🧂.*$/
+            ];
+
+            // Process each line
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                // Skip if line is a category header
+                if (categoryPatterns.some(pattern => pattern.test(line))) {
+                    continue;
+                }
+
+                // Remove bullet points or dashes if present
+                line = line.replace(/^[-•●\*\+]/, '').trim();
+
+                const category = categorizeItem(line);
+                if (!groceryItems[category]) {
+                    groceryItems[category] = [];
+                }
+                groceryItems[category].push({
+                    text: line,
+                    checked: false
+                });
+            }
+
+            localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+            document.getElementById('groceryInput').value = '';
+            document.getElementById('inputModal').classList.add('hidden');
+            renderGroceryList();
+        });
+
+        // Clear all items
+        document.getElementById('clearItems').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all items? This cannot be undone.')) {
+                localStorage.setItem('groceryItems', JSON.stringify({}));
+                renderGroceryList();
+                document.getElementById('inputModal').classList.add('hidden');
+            }
+        });
+
+        // Render the grocery list
+        function renderGroceryList() {
+            const groceryItems = JSON.parse(localStorage.getItem('groceryItems'));
+            const listContainer = document.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+            listContainer.innerHTML = '';
+
+            // Add header
+            listContainer.innerHTML = `
+                <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">My Grocery List</h2>
+                    <div class="flex gap-2">
+                        <button class="text-gray-500 hover:text-indigo-600 p-1 rounded-full">
+                            <i class="fas fa-sort"></i>
+                        </button>
+                        <button class="text-gray-500 hover:text-indigo-600 p-1 rounded-full">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add categories and items
+            Object.entries(categories).forEach(([categoryId, categoryInfo]) => {
+                const items = groceryItems[categoryId] || [];
+                if (items.length === 0) return;
+
+                // Category header
+                const categorySection = document.createElement('div');
+                categorySection.innerHTML = `
+                    <div class="px-6 py-3 bg-gray-50">
+                        <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                            <span class="text-xl">${categoryInfo.emoji}</span>
+                            <span>${categoryInfo.title}</span>
+                        </h3>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        ${items.map((item, index) => `
+                            <div class="px-6 py-3 flex items-center">
+                                <input type="checkbox" id="${categoryId}-${index}" 
+                                    class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                    ${item.checked ? 'checked' : ''}>
+                                <label for="${categoryId}-${index}" class="item-label ml-3 text-gray-700">${item.text}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                listContainer.appendChild(categorySection);
+            });
+
+            // Add checkbox event listeners
+            document.querySelectorAll('.item-checkbox').forEach((checkbox, index) => {
+                checkbox.addEventListener('change', function() {
+                    const [category, itemIndex] = this.id.split('-');
+                    groceryItems[category][itemIndex].checked = this.checked;
+                    localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+                    updateProgress();
+                });
+            });
+
+            updateProgress();
+        }
+
+        // Update progress indicators
         function updateProgress() {
-            const totalItems = document.querySelectorAll('.item-checkbox').length;
-            const checkedItems = document.querySelectorAll('.item-checkbox:checked').length;
-            const progressPercentage = Math.round((checkedItems / totalItems) * 100);
+            const groceryItems = JSON.parse(localStorage.getItem('groceryItems'));
+            let totalItems = 0;
+            let checkedItems = 0;
+
+            Object.values(groceryItems).forEach(items => {
+                if (!items) return;
+                totalItems += items.length;
+                checkedItems += items.filter(item => item.checked).length;
+            });
+
+            const progressPercentage = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
             
             // Update progress circle
             const circle = document.querySelector('.progress-ring__circle');
@@ -361,6 +592,72 @@
             // Update count
             document.querySelector('.absolute > span').textContent = `${checkedItems}/${totalItems}`;
         }
+
+        // Add select all toggle functionality - remove modal trigger
+        let isAllSelected = false;
+        document.getElementById('toggleSelectAll').addEventListener('click', function(e) {
+            const groceryItems = JSON.parse(localStorage.getItem('groceryItems'));
+            isAllSelected = !isAllSelected;
+            
+            // Update button text and icon
+            this.innerHTML = isAllSelected ? 
+                '<i class="fas fa-square"></i><span>Unselect All</span>' : 
+                '<i class="fas fa-check-square"></i><span>Select All</span>';
+
+            // Update all checkboxes
+            Object.keys(groceryItems).forEach(category => {
+                if (groceryItems[category]) {
+                    groceryItems[category].forEach(item => {
+                        item.checked = isAllSelected;
+                    });
+                }
+            });
+
+            localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+            renderGroceryList();
+        });
+
+        // Add clear selected functionality
+        document.getElementById('clearSelected').addEventListener('click', function() {
+            const groceryItems = JSON.parse(localStorage.getItem('groceryItems'));
+            let hasSelectedItems = false;
+
+            // Check if there are any selected items
+            Object.values(groceryItems).forEach(items => {
+                if (items && items.some(item => item.checked)) {
+                    hasSelectedItems = true;
+                }
+            });
+
+            if (!hasSelectedItems) {
+                alert('No items are selected');
+                return;
+            }
+
+            if (confirm('Are you sure you want to remove all selected items?')) {
+                // Remove checked items from each category
+                Object.keys(groceryItems).forEach(category => {
+                    if (groceryItems[category]) {
+                        groceryItems[category] = groceryItems[category].filter(item => !item.checked);
+                        // Remove empty categories
+                        if (groceryItems[category].length === 0) {
+                            delete groceryItems[category];
+                        }
+                    }
+                });
+
+                // Reset select all button state
+                isAllSelected = false;
+                document.getElementById('toggleSelectAll').innerHTML = 
+                    '<i class="fas fa-check-square"></i><span>Select All</span>';
+
+                localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+                renderGroceryList();
+            }
+        });
+
+        // Initialize the list
+        renderGroceryList();
     </script>
 </body>
 </html>
