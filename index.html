@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshCart - Grocery List App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .item-checkbox:checked + .item-label {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">FreshCart</h1>
+                <p class="text-gray-500">Your smart grocery companion</p>
+            </div>
+            <div class="relative">
+                <div class="w-16 h-16">
+                    <svg class="w-full h-full" viewBox="0 0 36 36">
+                        <path
+                            d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#e2e8f0"
+                            stroke-width="3"
+                        />
+                        <path
+                            class="progress-ring__circle"
+                            d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#4f46e5"
+                            stroke-width="3"
+                            stroke-dasharray="100, 100"
+                            stroke-dashoffset="40"
+                        />
+                        <text x="18" y="20.5" text-anchor="middle" font-size="10" fill="#4f46e5" font-weight="bold">60%</text>
+                    </svg>
+                </div>
+                <span class="absolute -bottom-1 right-0 bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full">12/20</span>
+            </div>
+        </header>
+
+        <!-- Search and Add -->
+        <div class="flex mb-6 gap-3">
+            <div class="relative flex-1">
+                <input type="text" placeholder="Search items..." class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+            </div>
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i class="fas fa-plus"></i>
+                <span>Add Item</span>
+            </button>
+        </div>
+
+        <!-- Categories -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-200">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mb-2">
+                    <i class="fas fa-drumstick-bite text-red-500"></i>
+                </div>
+                <h3 class="font-medium text-gray-800">Meat & Seafood</h3>
+                <p class="text-xs text-gray-500">5 items</p>
+            </div>
+            <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-200">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                    <i class="fas fa-cheese text-blue-500"></i>
+                </div>
+                <h3 class="font-medium text-gray-800">Dairy</h3>
+                <p class="text-xs text-gray-500">6 items</p>
+            </div>
+            <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-200">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
+                    <i class="fas fa-bread-slice text-yellow-500"></i>
+                </div>
+                <h3 class="font-medium text-gray-800">Bakery</h3>
+                <p class="text-xs text-gray-500">2 items</p>
+            </div>
+            <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-indigo-200">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+                    <i class="fas fa-apple-alt text-green-500"></i>
+                </div>
+                <h3 class="font-medium text-gray-800">Produce</h3>
+                <p class="text-xs text-gray-500">5 items</p>
+            </div>
+        </div>
+
+        <!-- Grocery List -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">My Grocery List</h2>
+                <div class="flex gap-2">
+                    <button class="text-gray-500 hover:text-indigo-600 p-1 rounded-full">
+                        <i class="fas fa-sort"></i>
+                    </button>
+                    <button class="text-gray-500 hover:text-indigo-600 p-1 rounded-full">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Meat & Seafood -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-drumstick-bite text-red-500"></i>
+                    <span>Meat & Seafood</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item1" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item1" class="item-label ml-3 text-gray-700">Chicken thighs or ground beef (5–6 lbs)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item2" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item2" class="item-label ml-3 text-gray-700">Beef jerky (optional, for snacks)</label>
+                </div>
+            </div>
+
+            <!-- Dairy -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-cheese text-blue-500"></i>
+                    <span>Dairy</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item3" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item3" class="item-label ml-3 text-gray-700">Eggs (2 dozen)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item4" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item4" class="item-label ml-3 text-gray-700">Whole milk (2 gallons)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item5" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item5" class="item-label ml-3 text-gray-700">Butter or margarine (1 stick or tub)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item6" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item6" class="item-label ml-3 text-gray-700">Cream cheese (1 small tub)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item7" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item7" class="item-label ml-3 text-gray-700">Greek yogurt or cottage cheese (3–4 cups)</label>
+                </div>
+            </div>
+
+            <!-- Bakery -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-bread-slice text-yellow-500"></i>
+                    <span>Bakery</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item8" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item8" class="item-label ml-3 text-gray-700">Whole grain bread (1 loaf)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item9" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item9" class="item-label ml-3 text-gray-700">Bagels (1 pack, ~6)</label>
+                </div>
+            </div>
+
+            <!-- Dry Goods & Grains -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-wheat-awn text-amber-500"></i>
+                    <span>Dry Goods & Grains</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item10" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item10" class="item-label ml-3 text-gray-700">White rice (3–4 cups dry = ~8–9 cups cooked)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item11" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item11" class="item-label ml-3 text-gray-700">Pasta (2–3 boxes)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item12" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item12" class="item-label ml-3 text-gray-700">Rolled oats (1 lb or small container)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item13" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item13" class="item-label ml-3 text-gray-700">Granola bars (1 box)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item14" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item14" class="item-label ml-3 text-gray-700">Trail mix (1 bag)</label>
+                </div>
+            </div>
+
+            <!-- Nuts & Snacks -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-peanuts text-amber-700"></i>
+                    <span>Nuts & Snacks</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item15" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item15" class="item-label ml-3 text-gray-700">Peanut butter (1 large jar)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item16" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item16" class="item-label ml-3 text-gray-700">Almonds or mixed nuts (1 small bag)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item17" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item17" class="item-label ml-3 text-gray-700">Crackers (1 box)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item18" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item18" class="item-label ml-3 text-gray-700">Pop-Tarts (1 box, 6-pack)</label>
+                </div>
+            </div>
+
+            <!-- Produce -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-apple-alt text-green-500"></i>
+                    <span>Produce</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item19" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item19" class="item-label ml-3 text-gray-700">Bananas (7–10)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item20" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item20" class="item-label ml-3 text-gray-700">Onions (2–3)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item21" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item21" class="item-label ml-3 text-gray-700">Bell peppers, spinach, or mixed veggies (fresh or frozen)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item22" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item22" class="item-label ml-3 text-gray-700">Garlic (optional for flavor)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item23" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item23" class="item-label ml-3 text-gray-700">Dried fruit (optional)</label>
+                </div>
+            </div>
+
+            <!-- Pantry & Extras -->
+            <div class="px-6 py-3 bg-gray-50">
+                <h3 class="font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-spoon text-purple-500"></i>
+                    <span>Pantry & Extras</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item24" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item24" class="item-label ml-3 text-gray-700">Pasta sauce (2 jars)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item25" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item25" class="item-label ml-3 text-gray-700">Seasonings: salt, pepper, garlic powder, chili flakes, etc.</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item26" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item26" class="item-label ml-3 text-gray-700">Cinnamon or cocoa powder (optional for shakes)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item27" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item27" class="item-label ml-3 text-gray-700">Olive oil (1 bottle)</label>
+                </div>
+                <div class="px-6 py-3 flex items-center">
+                    <input type="checkbox" id="item28" class="item-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="item28" class="item-label ml-3 text-gray-700">Honey (1 small bottle)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 py-2 px-6">
+            <div class="flex justify-between items-center">
+                <button class="flex flex-col items-center text-indigo-600">
+                    <i class="fas fa-list-check text-lg"></i>
+                    <span class="text-xs mt-1">List</span>
+                </button>
+                <button class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-store text-lg"></i>
+                    <span class="text-xs mt-1">Stores</span>
+                </button>
+                <button class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-chart-pie text-lg"></i>
+                    <span class="text-xs mt-1">Stats</span>
+                </button>
+                <button class="flex flex-col items-center text-gray-500">
+                    <i class="fas fa-user text-lg"></i>
+                    <span class="text-xs mt-1">Profile</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add functionality to checkboxes
+        document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateProgress();
+            });
+        });
+
+        function updateProgress() {
+            const totalItems = document.querySelectorAll('.item-checkbox').length;
+            const checkedItems = document.querySelectorAll('.item-checkbox:checked').length;
+            const progressPercentage = Math.round((checkedItems / totalItems) * 100);
+            
+            // Update progress circle
+            const circle = document.querySelector('.progress-ring__circle');
+            const circumference = 2 * Math.PI * 15.9155;
+            const offset = circumference - (progressPercentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Update progress text
+            document.querySelector('.progress-ring__circle + text').textContent = `${progressPercentage}%`;
+            
+            // Update count
+            document.querySelector('.absolute > span').textContent = `${checkedItems}/${totalItems}`;
+        }
+    </script>
+</body>
+</html>
